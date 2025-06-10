@@ -10,9 +10,9 @@ namespace BilleteraCriptoProg3.Models
         [Required]
         public string CodigoCripto { get; set; }
         public string Metodo { get; set; }
-        public int idCliente { get; set; }
-        [ForeignKey("idCliente")]
-        public Cliente? cliente { get; set; }
+        public int ClienteId { get; set; }
+        [ForeignKey("ClienteId")]
+        public Cliente Cliente { get; set; }
         public double CantCripto { get; set; }
         public double Dinero { get; set; } 
         public DateTime Datetime { get; set; }
