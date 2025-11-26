@@ -1,0 +1,6 @@
+@BilleteraCriptoProg3_HostAddress = http://localhost:5225
+
+GET {{BilleteraCriptoProg3_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

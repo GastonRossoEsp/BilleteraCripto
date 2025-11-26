@@ -1,0 +1,17 @@
+# --- BACKEND .NET ---
+backend/bin/
+backend/obj/
+backend/*.user
+backend/*.db
+backend/*.exe
+backend/*.dll
+
+# --- FRONTEND VUE ---
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# --- GENERAL ---
+*.log
+*.tmp
+.env
