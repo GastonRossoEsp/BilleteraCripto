@@ -1,8 +1,6 @@
-﻿using Azure;
-using BilleteraCriptoProg3.Models;
+﻿using BilleteraCriptoProg3.DTOs;
+using BilleteraCriptoProg3.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace BilleteraCriptoProg3.Controllers
 {
@@ -10,54 +8,54 @@ namespace BilleteraCriptoProg3.Controllers
     [Route("api/[controller]")]
     public class TransaccionController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IHttpClientFactory _httpClientFactory;
-
-        public TransaccionController(AppDbContext context, IHttpClientFactory httpClientFactory)
+        private readonly ITransaccionService _transaccionService;
+        public TransaccionController(ITransaccionService transaccionService)
         {
-            _context = context;
-            _httpClientFactory = httpClientFactory;
+            _transaccionService = transaccionService;
         }
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Transaccion>>> Get()
-            => await _context.Transacciones.OrderByDescending(t => t.Datetime).ToListAsync();
 
-        [HttpGet("{clienteId}")]
-        public async Task<ActionResult<IEnumerable<Transaccion>>> Get(int clienteId)
-            => await _context.Transacciones.Where(t => t.ClienteId == clienteId).OrderByDescending(t => t.Datetime).ToListAsync();
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var transacciones = await _transaccionService.GetTransaccionesAsync();
+            return Ok(transacciones);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(int id)
+        {
+            var transacciones = await _transaccionService.GetTransaccionByIdAsync(id);
+            if (transacciones == null) return NotFound("Transacción no encontrada.");
+            return Ok(transacciones);
+        }
 
         [HttpPost]
-        public async Task<ActionResult<Transaccion>> Post(TransaccionDTO dto)
+        public async Task<IActionResult> Create(TransaccionRequestDTO dto)
+        {
+            var transaccionNew = await _transaccionService.CreateTransaccionAsync(dto);
+            return Ok(transaccionNew);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, UpdateTransaccionDto dto)
         {
             try
             {
-            if (dto.CantCripto <= 0) return BadRequest("La cantidad de cripto debe ser mayor a 0 (cero).");
-            if (dto.Metodo != "purchase" && dto.Metodo != "sale") return BadRequest("Metodo invalido: Debe colocar 'purchase' o 'sale'.");
-
-            var http = _httpClientFactory.CreateClient();
-            string url = $"https://criptoya.com/api/satoshitango/{dto.CodigoCripto}/ars";
-
-                var res = await http.GetFromJsonAsync<CriptoYaRespuesta>(url);
-                if (res == null || res.totalAsk == 0) return BadRequest("No se obtuvo el precio de la criptomoneda.");
-                if (dto.CantCripto <= 0) return BadRequest("La cantidad de criptomonedas debe ser mayor a 0 (cero)");
-                var total = dto.CantCripto * res.totalAsk;
-
-                var transaccion = new Transaccion
-                {
-                    Metodo = dto.Metodo,
-                    ClienteId = dto.ClienteId,
-                    CodigoCripto = dto.CodigoCripto,
-                    CantCripto = dto.CantCripto,
-                    Datetime = dto.Datetime,
-                    Dinero = Math.Round(total, 2)
-                };
-                _context.Transacciones.Add(transaccion);
-                await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(Get), new { id = transaccion.Id }, transaccion);
+                var updated = await _transaccionService.UpdateTransaccionAsync(id, dto);
+                if (!updated) return NotFound("Transacción no encontrada.");
+                return NoContent();
             }
-            catch (Exception ex) {return BadRequest($"Error al procesar la respuesta de CriptoYa: {ex.Message} - {ex.InnerException?.Message}"); }
-
-
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var eliminado = await _transaccionService.DeleteTransaccionAsync(id);
+            if (!eliminado) return NotFound("Transacción no encontrada.");
+            return NoContent();
         }
     }
 }
