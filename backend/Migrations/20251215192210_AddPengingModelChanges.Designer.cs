@@ -4,6 +4,7 @@ using BilleteraCriptoProg3.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BilleteraCriptoProg3.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251215192210_AddPengingModelChanges")]
+    partial class AddPengingModelChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,12 +39,7 @@ namespace BilleteraCriptoProg3.Migrations
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("Saldo")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -69,9 +67,8 @@ namespace BilleteraCriptoProg3.Migrations
                     b.Property<DateTime>("Datetime")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("Dinero")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<double>("Dinero")
+                        .HasColumnType("float");
 
                     b.Property<string>("Metodo")
                         .IsRequired()
@@ -87,17 +84,12 @@ namespace BilleteraCriptoProg3.Migrations
             modelBuilder.Entity("BilleteraCriptoProg3.Entities.Transaccion", b =>
                 {
                     b.HasOne("BilleteraCriptoProg3.Entities.Cliente", "Cliente")
-                        .WithMany("Transacciones")
+                        .WithMany()
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Cliente");
-                });
-
-            modelBuilder.Entity("BilleteraCriptoProg3.Entities.Cliente", b =>
-                {
-                    b.Navigation("Transacciones");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,4 +1,7 @@
-﻿using BilleteraCriptoProg3.Models;
+﻿using BilleteraCriptoProg3.Data;
+using BilleteraCriptoProg3.DTOs;
+using BilleteraCriptoProg3.Entities;
+using BilleteraCriptoProg3.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,32 +11,49 @@ namespace BilleteraCriptoProg3.Controllers
     [Route("api/[controller]")]
     public class ClienteController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        public ClienteController(AppDbContext context)
+        private readonly IClienteService _clienteService;
+
+        public ClienteController(IClienteService clienteService)
         {
-            _context = context;
+            _clienteService = clienteService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cliente>>> Get()
-            => await _context.Clientes.ToListAsync();
+        public async Task<IActionResult> GetAll()
+        {
+            var clientes = await _clienteService.GetClientesAsync();
+            return Ok(clientes);
+        }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Cliente>> Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            var cliente = await _context.Clientes.FindAsync(id);
-            if (cliente == null) return NotFound();
+            var cliente = await _clienteService.GetClienteByIdAsync(id);
+            if (cliente == null) return NotFound("Cliente no encontrado.");
             return Ok(cliente);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Cliente>> Post(Cliente cliente)
+        public async Task<ActionResult> Create(ClienteDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(cliente.Nombre)) return BadRequest("El nombre del cliente es requerido.");
+            var clientenew = await _clienteService.CreateClienteAsync(dto);
+            return CreatedAtAction(nameof(Get), new { id = clientenew.Id }, clientenew);
+        }
 
-            _context.Clientes.Add(cliente);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = cliente.Id }, cliente);
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, ClienteDTO dto)
+        {
+            var actualizado = await _clienteService.UpdateClienteAsync(id, dto);
+            if (actualizado == null) return NotFound("Cliente no encontrado.");
+            return Ok(actualizado);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var eliminado = await _clienteService.DeleteClienteAsync(id);
+            if (!eliminado) return NotFound("Cliente no encontrado.");
+            return NoContent();
         }
     }
 }
