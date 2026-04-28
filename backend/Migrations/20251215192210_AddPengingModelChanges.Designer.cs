@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BilleteraCriptoProg3.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250606001422_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251215192210_AddPengingModelChanges")]
+    partial class AddPengingModelChanges
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,13 +25,17 @@ namespace BilleteraCriptoProg3.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BilleteraCriptoProg3.Models.Cliente", b =>
+            modelBuilder.Entity("BilleteraCriptoProg3.Entities.Cliente", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -42,7 +46,7 @@ namespace BilleteraCriptoProg3.Migrations
                     b.ToTable("Clientes");
                 });
 
-            modelBuilder.Entity("BilleteraCriptoProg3.Models.Transaccion", b =>
+            modelBuilder.Entity("BilleteraCriptoProg3.Entities.Transaccion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -52,6 +56,9 @@ namespace BilleteraCriptoProg3.Migrations
 
                     b.Property<double>("CantCripto")
                         .HasColumnType("float");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CodigoCripto")
                         .IsRequired()
@@ -67,25 +74,22 @@ namespace BilleteraCriptoProg3.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("idCliente")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("idCliente");
+                    b.HasIndex("ClienteId");
 
                     b.ToTable("Transacciones");
                 });
 
-            modelBuilder.Entity("BilleteraCriptoProg3.Models.Transaccion", b =>
+            modelBuilder.Entity("BilleteraCriptoProg3.Entities.Transaccion", b =>
                 {
-                    b.HasOne("BilleteraCriptoProg3.Models.Cliente", "cliente")
+                    b.HasOne("BilleteraCriptoProg3.Entities.Cliente", "Cliente")
                         .WithMany()
-                        .HasForeignKey("idCliente")
+                        .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("cliente");
+                    b.Navigation("Cliente");
                 });
 #pragma warning restore 612, 618
         }
