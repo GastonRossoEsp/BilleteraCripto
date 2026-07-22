@@ -42,8 +42,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<CriptoYaService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("VuePolicy",
+        policy =>
+        {
+            policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
+app.UseCors("VuePolicy");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
