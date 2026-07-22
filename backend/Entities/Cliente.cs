@@ -12,7 +12,7 @@ namespace BilleteraCriptoProg3.Entities
         [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Saldo { get; set; } = 0;
+        public decimal Saldo { get; set; }
         public List<Transaccion> Transacciones { get; set; }
     }
 }

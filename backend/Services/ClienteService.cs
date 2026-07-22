@@ -40,11 +40,16 @@ namespace BilleteraCriptoProg3.Services
         public async Task<ClienteDTO?> UpdateClienteAsync(int id, ClienteDTO dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
+
+            Console.WriteLine($"Saldo recibido: {dto.Saldo}");
+
             var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null) return null;
 
             cliente.Nombre = dto.Nombre;
             cliente.Email = dto.Email;
+            cliente.Saldo = dto.Saldo;
+
             _context.Clientes.Update(cliente);
             await _context.SaveChangesAsync();
             return cliente.ToDTO();

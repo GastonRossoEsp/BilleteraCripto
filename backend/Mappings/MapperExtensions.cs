@@ -37,7 +37,8 @@ namespace BilleteraCriptoProg3.Mappings
             {
                 Id = dto.Id,
                 Nombre = dto.Nombre ?? string.Empty,
-                Email = dto.Email ?? string.Empty
+                Email = dto.Email ?? string.Empty,
+                Saldo = dto.Saldo
             };
         }
 
