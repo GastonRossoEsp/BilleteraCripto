@@ -1,4 +1,4 @@
-<script>
+<script setup>
 import TransaccionForm from '@/components/TransaccionForm.vue'
 import TransaccionLista from '@/components/TransaccionLista.vue'
 </script>
@@ -7,6 +7,9 @@ import TransaccionLista from '@/components/TransaccionLista.vue'
     <div>
         <h2>Transacciones</h2>
         <TransaccionForm />
-        <TransaccionList />
+
+        <hr />
+        
+        <TransaccionLista />
     </div>
 </template>

@@ -5,6 +5,7 @@
       <nav>
         <router-link to="/">Inicio</router-link> |
         <router-link to="/transacciones">Transacciones</router-link>
+        <router-link to="/clientes">Clientes</router-link>
       </nav>
       <router-view />
     </header>
