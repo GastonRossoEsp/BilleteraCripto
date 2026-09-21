@@ -32,8 +32,32 @@ namespace BilleteraCriptoProg3.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(TransaccionRequestDTO dto)
         {
-            var transaccionNew = await _transaccionService.CreateTransaccionAsync(dto);
-            return Ok(transaccionNew);
+            try
+            {
+                var transaccionNew = await _transaccionService.CreateTransaccionAsync(dto);
+                return Ok(transaccionNew);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message,
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = ex.Message,
+                });
+            }
         }
 
         [HttpPut("{id}")]

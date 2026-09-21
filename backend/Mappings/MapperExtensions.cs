@@ -12,6 +12,7 @@ namespace BilleteraCriptoProg3.Mappings
                 Id = t.Id,
                 CodigoCripto = t.CodigoCripto,
                 Metodo = t.Metodo,
+                ClienteId = t.ClienteId,
                 CantCripto = t.CantCripto,
                 Dinero = t.Dinero,
                 Datetime = t.Datetime,
