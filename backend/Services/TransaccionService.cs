@@ -48,11 +48,13 @@ namespace BilleteraCriptoProg3.Services
 
             var cliente = await _context.Clientes.FindAsync(transaccionDto.ClienteId);
             if (cliente == null) throw new Exception("Cliente no encontrado.");
+            var codigoCripto = transaccionDto.CodigoCripto.Trim().ToLower();
+            var metodo = transaccionDto.Metodo.Trim().ToLower();
 
             var client = _httpFactory.CreateClient();
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-            var criptoData = await client.GetFromJsonAsync<CriptoYaRespuesta>($"https://criptoya.com/api/{transaccionDto.CodigoCripto}/ars/1", options);
+            var criptoData = await client.GetFromJsonAsync<CriptoYaRespuesta>($"https://criptoya.com/api/{codigoCripto}/ars/1", options);
             
             // tomamos solo los ask validos (>0)
             var validAsks = criptoData.Values
@@ -68,18 +70,49 @@ namespace BilleteraCriptoProg3.Services
             // Crear entidad y calcular Dinero en una línea
             var entity = new Transaccion
             {
-                CodigoCripto = transaccionDto.CodigoCripto,
-                Metodo = transaccionDto.Metodo,
+                CodigoCripto = codigoCripto,
+                Metodo = metodo,
                 ClienteId = transaccionDto.ClienteId,
                 CantCripto = transaccionDto.CantCripto,
                 Datetime = transaccionDto.Datetime,
                 Dinero = Math.Round((decimal)(transaccionDto.CantCripto * precio), 2)
             };
-            var metodo = transaccionDto.Metodo.Trim().ToLower();
-            if (metodo == "purchase" || metodo == "buy" || metodo == "compra") cliente.Saldo -= (decimal)entity.Dinero;
 
-            else if (metodo == "sale" || metodo == "sell" || metodo == "venta") cliente.Saldo += (decimal)entity.Dinero;
-
+            if (metodo == "purchase" || metodo == "buy" || metodo == "compra")
+            {
+                // Validar que el cliente tenga suficiente saldo para comprar.
+                if (entity.Dinero > cliente.Saldo)
+                {
+                    throw new ArgumentException(
+                        $"No se puede realizar la compra. " +
+                        $"El cliente dispone de {cliente.Saldo:f2} " +
+                        $"y necesita {entity.Dinero:f2}."
+                    );
+                }
+                cliente.Saldo -= entity.Dinero;
+            }
+            else if (metodo == "sale" || metodo == "sell" || metodo == "venta")
+            {
+                var cantidadDisponible = await _context.Transacciones
+                .Where(t =>
+                    t.ClienteId == transaccionDto.ClienteId &&
+                    t.CodigoCripto.ToLower() == transaccionDto.CodigoCripto.ToLower())
+                .SumAsync(t => 
+                    t.Metodo.ToLower() == "purchase" ||
+                    t.Metodo.ToLower() == "buy" ||
+                    t.Metodo.ToLower() == "compra"
+                        ? t.CantCripto
+                        : -t.CantCripto
+                );
+                if (transaccionDto.CantCripto > cantidadDisponible)
+                {
+                    throw new ArgumentException(
+                        $"No se puede vender {transaccionDto.CantCripto} {transaccionDto.CodigoCripto}. " +
+                        $"El cliente dispone solamente de {cantidadDisponible}."
+                    );
+                }
+                cliente.Saldo += entity.Dinero;
+            }
             else throw new Exception($"Método no reconocido: {transaccionDto.Metodo}");
 
             _context.Clientes.Update(cliente);
