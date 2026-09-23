@@ -8,5 +8,6 @@ namespace BilleteraCriptoProg3.Services.Interfaces
         Task<ClienteDTO> CreateClienteAsync(ClienteDTO dto);
         Task<ClienteDTO?> UpdateClienteAsync(int id, ClienteDTO dto);
         Task<bool> DeleteClienteAsync(int id);
+        Task<EstadoCarteraDTO?> GetEstadoCarteraAsync(int id);
     }
 }

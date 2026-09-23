@@ -33,6 +33,14 @@ namespace BilleteraCriptoProg3.Controllers
             return Ok(cliente);
         }
 
+        [HttpGet("{id}/cartera")]
+        public async Task<IActionResult> GetCartera(int id)
+        {
+            var cartera = await _clienteService.GetEstadoCarteraAsync(id);
+            if (cartera == null) return NotFound("Cliente no encontrado.");
+            return Ok(cartera);
+        }
+
         [HttpPost]
         public async Task<ActionResult> Create(ClienteDTO dto)
         {

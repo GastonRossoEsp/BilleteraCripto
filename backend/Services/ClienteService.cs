@@ -9,9 +9,11 @@ namespace BilleteraCriptoProg3.Services
     public class ClienteService : IClienteService
     {
         private readonly AppDbContext _context;
-        public ClienteService(AppDbContext context)
+        private readonly CriptoYaService _criptoYaService;
+        public ClienteService(AppDbContext context, CriptoYaService criptoYaService)
         {
             _context = context;
+            _criptoYaService = criptoYaService;
         }
 
         public async Task<List<ClienteDTO>> GetClientesAsync()
@@ -62,6 +64,45 @@ namespace BilleteraCriptoProg3.Services
             _context.Clientes.Remove(cliente);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<EstadoCarteraDTO?> GetEstadoCarteraAsync(int id)
+        {
+            var cliente = await _context.Clientes.Include(c => c.Transacciones).FirstOrDefaultAsync(c => c.Id == id);
+            if (cliente == null) return null;
+
+            var saldos = cliente.Transacciones.GroupBy(t => t.CodigoCripto.Trim().ToLower())
+                .Select(grupo => new
+                {
+                    CodigoCripto = grupo.Key,
+                    Cantidad = grupo.Sum(t =>
+                    t.Metodo.Trim().ToLower() == "purchase" ||
+                    t.Metodo.Trim().ToLower() == "buy" ||
+                    t.Metodo.Trim().ToLower() == "compra"
+                    ? t.CantCripto
+                    : -t.CantCripto
+                    )
+                }).Where(x => x.Cantidad > 0).ToList();
+
+            var resultado = new EstadoCarteraDTO
+            {
+                ClienteId = cliente.Id,
+                ClienteNombre = cliente.Nombre
+            };
+
+            foreach (var saldo in saldos)
+            {
+                var precioActual = await _criptoYaService.GetPrecioActualAsync(saldo.CodigoCripto);
+                var dinero = Math.Round((decimal)(saldo.Cantidad * precioActual), 2);
+                resultado.Criptomonedas.Add(new CarteraCriptoDTO
+                {
+                    CodigoCripto = saldo.CodigoCripto,
+                    Cantidad = saldo.Cantidad,
+                    Dinero = dinero
+                });
+                resultado.Total += dinero;
+            }
+            return resultado;
         }
     }
 }
