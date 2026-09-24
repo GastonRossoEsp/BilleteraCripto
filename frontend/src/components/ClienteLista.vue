@@ -10,7 +10,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="c in store.clientes":key="c.id">
+        <tr v-for="c in store.clientes" :key="c.id">
           <td>{{ c.nombre }}</td>
           <td>{{ c.email }}</td>
           <td>

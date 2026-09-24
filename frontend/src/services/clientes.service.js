@@ -10,13 +10,13 @@ export const getClienteById = async (id) => {
   return res.data
 }
 
-export const crearCliente = async (data) => {
-  const res = await API.post('/Cliente', data)
+export const crearCliente = async (cliente) => {
+  const res = await API.post('/Cliente', cliente)
   return res.data
 }
 
-export const actualizarCliente = async (id, data) => {
-  const res = await API.put(`/Cliente/${id}`, data)
+export const actualizarCliente = async (id, cliente) => {
+  const res = await API.put(`/Cliente/${id}`, cliente)
   return res.data
 }
 
