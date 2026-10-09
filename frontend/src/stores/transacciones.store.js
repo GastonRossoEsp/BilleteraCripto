@@ -22,7 +22,9 @@ export const useTransaccionesStore = defineStore("transacciones", {
       try {
         this.transacciones = await getTransacciones()
       } catch (error) {
-        this.error = "No se pudieron obtener las transacciones."
+        console.error("error al obtener transacciones: ", error)
+        this.error = error.response?.data?.mensaje || error.message || "No se pudieron obtener las transacciones."
+        throw error
       } finally {
         this.loading = false
       }

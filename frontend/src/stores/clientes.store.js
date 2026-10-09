@@ -22,7 +22,9 @@ export const useClientesStore = defineStore("clientes",{
       try {
         this.clientes = await getClientes()
       } catch (error) {
-        this.error = "No se pudieron obtener los clientes."
+        console.error("error al obtener clientes: ", error)
+        this.error = error.response?.data?.mensaje || error.message ||"No se pudieron obtener los clientes."
+        throw error
       } finally {
         this.loading = false
       }
