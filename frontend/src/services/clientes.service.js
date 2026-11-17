@@ -23,3 +23,8 @@ export const actualizarCliente = async (id, cliente) => {
 export const eliminarCliente = async (id) => {
   await API.delete(`/Cliente/${id}`)
 }
+
+export const cargarSaldoCliente = async (id, monto) => {
+  const res = await API.post(`/Cliente/${id}/saldo`, { monto })
+  return res.data
+}
