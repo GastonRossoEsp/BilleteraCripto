@@ -3,6 +3,7 @@ using BilleteraCriptoProg3.DTOs;
 using BilleteraCriptoProg3.Mappings;
 using BilleteraCriptoProg3.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Mail;
 
 namespace BilleteraCriptoProg3.Services
 {
@@ -32,8 +33,16 @@ namespace BilleteraCriptoProg3.Services
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var cliente = dto.ToEntity();
+            ValidarDatosCliente(dto);
+            var email = dto.Email.Trim().ToLowerInvariant();
+            var emailExiste = await _context.Clientes.AnyAsync(c => c.Email.ToLower() == email);
+            if (emailExiste) throw new ArgumentException("Ya existe un cliente registrado con ese email.");
 
+            var cliente = dto.ToEntity();
+            cliente.Nombre = dto.Nombre.Trim();
+            cliente.Email = email;
+            //el saldo inicial no se establece desde el formulario de alta, se utiliza la funcion de carga de saldo.
+            cliente.Saldo = 0;
             _context.Clientes.Add(cliente);
             await _context.SaveChangesAsync();
             return cliente.ToDTO();
@@ -42,15 +51,16 @@ namespace BilleteraCriptoProg3.Services
         public async Task<ClienteDTO?> UpdateClienteAsync(int id, ClienteDTO dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-            Console.WriteLine($"Saldo recibido: {dto.Saldo}");
+            ValidarDatosCliente(dto);
 
             var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null) return null;
+            var email = dto.Email.Trim().ToLowerInvariant();
+            var emailExiste = await _context.Clientes.AnyAsync(c => c.Id != id && c.Email.ToLower() == email);
+            if (emailExiste) throw new ArgumentException("Ya existe otro cliente registrado con ese email.");
 
-            cliente.Nombre = dto.Nombre;
-            cliente.Email = dto.Email;
-            cliente.Saldo = dto.Saldo;
+            cliente.Nombre = dto.Nombre.Trim();
+            cliente.Email = email;
 
             _context.Clientes.Update(cliente);
             await _context.SaveChangesAsync();
@@ -71,14 +81,14 @@ namespace BilleteraCriptoProg3.Services
             var cliente = await _context.Clientes.Include(c => c.Transacciones).FirstOrDefaultAsync(c => c.Id == id);
             if (cliente == null) return null;
 
-            var saldos = cliente.Transacciones.GroupBy(t => t.CodigoCripto.Trim().ToLower())
+            var saldos = cliente.Transacciones.GroupBy(t => t.CodigoCripto.Trim().ToLowerInvariant())
                 .Select(grupo => new
                 {
                     CodigoCripto = grupo.Key,
                     Cantidad = grupo.Sum(t =>
-                    t.Metodo.Trim().ToLower() == "purchase" ||
-                    t.Metodo.Trim().ToLower() == "buy" ||
-                    t.Metodo.Trim().ToLower() == "compra"
+                    t.Metodo.Trim().ToLowerInvariant() == "purchase" ||
+                    t.Metodo.Trim().ToLowerInvariant() == "buy" ||
+                    t.Metodo.Trim().ToLowerInvariant() == "compra"
                     ? t.CantCripto
                     : -t.CantCripto
                     )
@@ -87,7 +97,8 @@ namespace BilleteraCriptoProg3.Services
             var resultado = new EstadoCarteraDTO
             {
                 ClienteId = cliente.Id,
-                ClienteNombre = cliente.Nombre
+                ClienteNombre = cliente.Nombre,
+                SaldoDisponible = cliente.Saldo
             };
 
             foreach (var saldo in saldos)
@@ -102,7 +113,36 @@ namespace BilleteraCriptoProg3.Services
                 });
                 resultado.Total += dinero;
             }
+            resultado.PatrimonioTotal = resultado.Total + resultado.SaldoDisponible;
             return resultado;
+        }
+
+        public async Task<ClienteDTO> CargarSaldoAsync(int id, decimal monto)
+        {
+            if (monto <= 0) throw new ArgumentException("El monto a cargar debe ser mayor que cero.");
+
+            var cliente = await _context.Clientes.FindAsync(id);
+            if (cliente == null) throw new KeyNotFoundException("El cliente no existe");
+            cliente.Saldo += monto;
+            await _context.SaveChangesAsync();
+            return cliente.ToDTO();
+        }
+
+        private static void ValidarDatosCliente(ClienteDTO dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Nombre)) throw new ArgumentException("El nombre del cliente es obligatorio");
+            if (string.IsNullOrWhiteSpace(dto.Email)) throw new ArgumentException("El email del cliente es obligatorio");
+
+            try
+            {
+                var emailIngresado = dto.Email.Trim();
+                var email = new MailAddress(emailIngresado);
+                if (email.Address != emailIngresado) throw new ArgumentException("El email ingresado no es valido.");
+            }
+            catch (FormatException)
+            {
+                throw new ArgumentException("El email ingresado no es valido.");
+            }
         }
     }
 }
