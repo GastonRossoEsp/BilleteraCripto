@@ -44,16 +44,38 @@ namespace BilleteraCriptoProg3.Controllers
         [HttpPost]
         public async Task<ActionResult> Create(ClienteDTO dto)
         {
-            var clientenew = await _clienteService.CreateClienteAsync(dto);
-            return CreatedAtAction(nameof(Get), new { id = clientenew.Id }, clientenew);
+            try
+            {
+                var clientenew = await _clienteService.CreateClienteAsync(dto);
+                return CreatedAtAction(nameof(Get), new { id = clientenew.Id }, clientenew);
+            } catch (ArgumentException ex) { return BadRequest(new { mensaje = ex.Message}); }
+        }
+
+        [HttpPost("{id}/saldo")]
+        public async Task<IActionResult> CargarSaldo(int id, [FromBody] CargarSaldoDTO dto)
+        {
+            try
+            {
+                var cliente = await _clienteService.CargarSaldoAsync(id, dto.Monto);
+                return Ok(cliente);
+            } catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            } catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { mensaje = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, ClienteDTO dto)
         {
-            var actualizado = await _clienteService.UpdateClienteAsync(id, dto);
-            if (actualizado == null) return NotFound("Cliente no encontrado.");
-            return Ok(actualizado);
+            try
+            {
+                var actualizado = await _clienteService.UpdateClienteAsync(id, dto);
+                if (actualizado == null) return NotFound(new { mensaje = "Cliente no encontrado." });
+                return Ok(actualizado);
+            } catch (ArgumentException ex) { return BadRequest(new { mensaje = ex.Message }); }
         }
 
         [HttpDelete("{id}")]

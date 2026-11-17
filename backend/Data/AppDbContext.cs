@@ -16,6 +16,10 @@ namespace BilleteraCriptoProg3.Data
                 .Property(c => c.Saldo)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<Cliente>()
+                .HasIndex(c => c.Email)
+                .IsUnique();
+
             modelBuilder.Entity<Entities.Transaccion>()
                 .Property(t => t.Dinero)
                 .HasPrecision(18, 2);

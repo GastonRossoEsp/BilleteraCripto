@@ -125,28 +125,35 @@ namespace BilleteraCriptoProg3.Services
 
         public async Task<bool> UpdateTransaccionAsync(int id, UpdateTransaccionDto dto)
         {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            if (dto.CantCripto <= 0) throw new ArgumentException("CantCripto debe ser mayor que 0.");
+            if (string.IsNullOrWhiteSpace(dto.CodigoCripto)) throw new ArgumentException("Debe indicar una criptomoneda.");
+            var metodoNuevo = NormalizarMetodo(dto.Metodo);
             var transaccion = await _context.Transacciones.FirstOrDefaultAsync(t => t.Id == id);
             if (transaccion == null) throw new KeyNotFoundException("La transaccion no existe");
-            if (dto.CantCripto <=0) throw new ArgumentException("CantCripto debe ser mayor que 0.");
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.Id == transaccion.ClienteId);
+            if (cliente == null) throw new KeyNotFoundException("El cliente de la transaccion no existe.");
+            var metodoAnterior = NormalizarMetodo(transaccion.Metodo);
+            decimal dineroAnterior = transaccion.Dinero;
+            //estima el precio unitario implicito de la operacion original
+            decimal precioUnitario = dineroAnterior / (decimal)transaccion.CantCripto;
 
-            var client = _httpFactory.CreateClient();
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            
-            var markets = await client.GetFromJsonAsync<CriptoYaRespuesta>($"https://criptoya.com/api/{dto.CodigoCripto}/ars/1", options);
-            var market = markets?.Values.FirstOrDefault() ?? throw new Exception("No se encontraron datos del mercado para este cripto.");
+            //calcula el efecto monetario correspondiente a la nueva cantidad
+            //esto no modifica el importe historico de la transaccion
+            decimal dineroNuevoParaSaldo = Math.Round(precioUnitario * (decimal)dto.CantCripto, 2, MidpointRounding.AwayFromZero);
 
-            double precio =
-                market.ask > 0 ? market.ask :
-                market.totalAsk > 0 ? market.totalAsk :
-                market.bid > 0 ? market.bid :
-                market.totalBid > 0 ? market.totalBid :
-                throw new Exception("No se pudo obtener un precio válido para la criptomoneda.");
+            // Revierte el efecto de la operacion original
+            AjustarSaldo(cliente, metodoAnterior, dineroAnterior, revertir: true);
 
-            transaccion.CodigoCripto = dto.CodigoCripto;
-            transaccion.Metodo = dto.Metodo;
+            // Actualiza los datos editables
+            transaccion.CodigoCripto = dto.CodigoCripto.Trim().ToLowerInvariant();
+            transaccion.Metodo = metodoNuevo;
             transaccion.CantCripto = dto.CantCripto;
             transaccion.Datetime = dto.Datetime;
-            transaccion.Dinero = (decimal)Math.Round(precio * dto.CantCripto, 2);
+            // IMPORTANTE: no modifico transaccion.Dinero ,,,, la edicion conserva el importe original.
+
+            // aplcia el efecto de la operacion editada
+            AjustarSaldo(cliente, metodoNuevo, dineroNuevoParaSaldo, revertir: false);
 
             await _context.SaveChangesAsync();
             return true;
@@ -155,11 +162,36 @@ namespace BilleteraCriptoProg3.Services
 
         public async Task<bool> DeleteTransaccionAsync(int id)
         {
-            var transaccion = await _context.Transacciones.FindAsync(id);
+            var transaccion = await _context.Transacciones.FirstOrDefaultAsync(t => t.Id == id);
             if (transaccion == null) return false;
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.Id == transaccion.ClienteId);
+            if (cliente == null) throw new KeyNotFoundException("El cliente de la transaccion no existe.");
+            var metodo = NormalizarMetodo(transaccion.Metodo);
+            AjustarSaldo(cliente, metodo, transaccion.Dinero, revertir: true);
             _context.Transacciones.Remove(transaccion);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private static string NormalizarMetodo(string? metodo)
+        {
+            return metodo?.Trim().ToLowerInvariant() switch
+            {
+                "purchase" or "compra" => "purchase",
+                "sale" or "venta" => "sale",
+                _ => throw new ArgumentException("El metodo debe ser compra/purchase o venta/sale")
+            };
+        }
+
+        private static void AjustarSaldo(Cliente cliente, string metodo, decimal dinero, bool revertir)
+        {
+            if (metodo == "purchase")
+            {
+                cliente.Saldo += revertir ? dinero : -dinero;
+            } else
+            {
+                cliente.Saldo += revertir ? -dinero : dinero; // la normalizacion garantiza que sea una venta
+            }
         }
     }
 }
