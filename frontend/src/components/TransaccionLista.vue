@@ -164,3 +164,80 @@ onMounted(async() =>{
   }
 })
 </script>
+
+<style scoped>
+.lista-container {
+  background: white;
+  padding: 20px;
+  border: 1px solid #e0e4e8;
+  border-radius: 6px;
+  margin-top: 25px;
+}
+
+.encabezado {
+  margin-bottom: 15px;
+}
+
+.filtro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.filtro label {
+  margin: 0;
+}
+
+.filtro select {
+  margin: 0;
+  max-width: 300px;
+}
+
+.filtro button {
+  margin: 0;
+}
+
+.lista-container table {
+  margin-top: 15px;
+}
+
+.acciones {
+  min-width: 210px;
+  white-space: nowrap;
+}
+
+.acciones button {
+  margin: 3px;
+}
+
+.acciones button:last-child {
+  background-color: #a94442;
+}
+
+.acciones button:last-child:hover {
+  background-color: #873936;
+}
+
+.detalle {
+  background: #f4f6f8;
+  border: 1px solid #dce1e6;
+  border-radius: 5px;
+  padding: 18px;
+  margin-top: 22px;
+}
+
+.detalle h3 {
+  margin-top: 0;
+  color: #24364b;
+}
+
+.detalle p {
+  margin-bottom: 8px;
+}
+
+.error {
+  color: #b42318;
+}
+</style>

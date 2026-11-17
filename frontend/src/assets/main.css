@@ -1,35 +1,163 @@
-@import './base.css';
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #333333;
+  background-color: #f4f6f8;
+}
 
 #app {
-  max-width: 1280px;
+  min-height: 100vh;
+}
+
+.header {
+  background-color: #24364b;
+  color: white;
+}
+
+.header-content {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+  padding: 18px 24px;
 }
 
-a,
-.green {
+.header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+nav a {
+  color: #e5eaf0;
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+  font-size: 15px;
+  padding: 5px 0;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+nav a:hover,
+nav a.router-link-active {
+  color: white;
+  border-bottom: 2px solid #8bb9e8;
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 0 24px 40px;
+}
+
+h2 {
+  font-size: 23px;
+  margin-bottom: 10px;
+  color: #24364b;
+}
+
+h3 {
+  font-size: 20px;
+  margin: 20px 0 10px;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+button {
+  background-color: #315b83;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 15px;
+  cursor: pointer;
+  margin: 8px 5px 8px 0;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #254766;
+}
+
+button:disabled {
+  background-color: #aeb8c2;
+  cursor: not-allowed;
+}
+
+input, select, textarea {
+  width: 100%;
+  max-width: 400px;
+  padding: 9px 10px;
+  border: 1px solid #cfd8e3;
+  border-radius: 4px;
+  font-size: 15px;
+  background-color: white;
+  margin: 5px 0 12px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  margin-top: 18px 0;
+}
+
+th, td {
+  border: 1px solid #e0e4e8;
+  padding: 11px 13px;
+  text-align: left;
+}
+
+th {
+  background-color: #eaf0f5;
+  font-weight: 600;
+  color: #24364b;
+}
+
+tr:hover {
+  background-color: #f8fafc;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #dce1e6;
+  margin: 25px 0;
+}
+
+@media (max-width: 600px) {
+  .header-content {
+    padding: 16px;
+  }
+
+  nav {
+    gap: 12px;
+  }
+
+  .main-content {
+    padding: 0 14px 30px;
+    margin-top: 20px;
   }
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
 }

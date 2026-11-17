@@ -119,9 +119,14 @@ watch(() => props.transaccionEditar,(nuevaTransaccion) => {
 { immediate: true })
 
 const obtenerMensajeError = (err) => {
-  return (
-    err.response?.data?.mensaje || err.response?.data || err.message || "Ocurrio un error al procesar la transaccion."
-  )
+  const data = err.response?.data
+  if (typeof data === "string") {
+    return data
+  }
+  if (data && typeof data === "object") {
+    return (data.mensaje || data.message || data.title || "Ocurrió un error al guardar la transacción.")
+  }
+  return err.message || "Ocurrió un error al guardar la transacción."
 }
 
 const guardar = async () => {
@@ -197,3 +202,53 @@ onMounted(() => {
   cargarClientes()
 })
 </script>
+
+<style scoped>
+.form-container {
+  background: white;
+  padding: 22px;
+  border: 1px solid #e0e4e8;
+  border-radius: 6px;
+  margin-bottom: 25px;
+}
+
+.form-container h2 {
+  margin-bottom: 15px;
+}
+
+.form-container .campo {
+  margin-bottom: 10px;
+}
+
+.form-container .campo label {
+  display: block;
+  font-weight: 600;
+}
+
+.form-container .campo input,
+.form-container .campo select {
+  display: block;
+}
+
+.form-container .info {
+  color: #666;
+  font-size: 13px;
+  background: #f1f4f7;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.form-container .error {
+  color: #b42318;
+  margin: 10px 0;
+}
+
+.form-container .botones button + button {
+  background-color: #6c757d;
+}
+
+.form-container .botones button + button:hover {
+  background-color: #555e65;
+}
+</style>
